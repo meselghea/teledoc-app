@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
                     name: true,
                     }
                 },
-                reason: true,
+                rejectionReason: true,
+                symptoms: true,
                 description: true,
                 time: true,
                 date: true,

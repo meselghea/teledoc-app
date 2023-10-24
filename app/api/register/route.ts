@@ -50,6 +50,21 @@ export async function POST(req: Request){
                 role
             }
         });
+         if (role === "doctor") {
+            const doctorData = {
+                username: "", 
+                strNumber: "", 
+                price: null, 
+            };
+
+            // Create a Doctor entry for the user
+            const newDoctor = await db.doctor.create({
+                data: {
+                    ...doctorData,
+                    userId: newUser.id, // Link the Doctor to the newly created User
+                }
+            });
+        }
         const { password: newUserPassword, ...rest } = newUser
         return NextResponse.json({user: rest, message: "User create successfully"}, {status: 201});
     } catch(error) {

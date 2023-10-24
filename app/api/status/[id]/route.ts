@@ -30,7 +30,8 @@ export async function GET(
                     name: true,
                     }
                 },
-                reason: true,
+                rejectionReason: true,
+                symptoms: true,
                 description: true,
                 time: true,
                 date: true,
@@ -95,7 +96,8 @@ export async function GET(
                         name: true,
                         }
                     },
-                    reason: true,
+                    rejectionReason: true,
+                    symptoms: true,
                     description: true,
                     time: true,
                     date: true,

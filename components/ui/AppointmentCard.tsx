@@ -13,17 +13,17 @@ interface Appointment {
     image: string;
     name: string;
   };
+  rejectionReason: string;
 }
 export default function AppointmentCard(props: { appointment: Appointment }) {
   const rejected = "e209365d-44ef-4c5d-8eea-42c827dbaeb1";
   const accepted = "6d86abcc-f29b-4a64-9af4-4b55c4f1ee2b";
-
   const [isAccepted, setIsAccepted] = useState<string>(() => {
     return (
       localStorage.getItem(props.appointment.id) || props.appointment.statusId
     );
   });
-
+  const [rejectionReason, setRejectionReason] = useState<string>("");
   useEffect(() => {
     localStorage.setItem(props.appointment.id, isAccepted);
   }, [isAccepted, props.appointment.id]);
@@ -40,6 +40,7 @@ export default function AppointmentCard(props: { appointment: Appointment }) {
 
   const accept = async (id: string) => {
     setIsAccepted(accepted);
+    setRejectionReason("");
     const response = await fetch("/api/appointment/" + id, {
       method: "PATCH",
       headers: {
@@ -59,39 +60,12 @@ export default function AppointmentCard(props: { appointment: Appointment }) {
       },
       body: JSON.stringify({
         statusId: rejected,
+        rejectionReason: rejectionReason,
       }),
     });
   };
 
-  //   const reject = async (id: string) => {
-  //     try {
-  //       const rejectAppointmentUrl = "api/appointment/${id}";
-
-  //       const response = await fetch(rejectAppointmentUrl, {
-  //         method: "PATCH",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         }
-  //         body: JSONawait appointment.update({
-  //           where: { id },
-  //           data: { status: "e209365d-44ef-4c5d-8eea-42c827dbaeb1" },
-  //         });
-  //       })
-
-  //       if (response.status === 204) {
-  //         return {
-  //           status: "success",
-  //           message: "Appointment with ID ${id} has been rejected",
-  //         };
-  //       } else
-
-  //       if
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //     setIsAccepted("rejected");
-  //   };
-
+  
   return (
     <div className="flex gap-4 w-full bg-[#d9d9d9]/30 rounded-lg p-6 mb-4">
       {/* PICTURE */}
@@ -147,7 +121,7 @@ export default function AppointmentCard(props: { appointment: Appointment }) {
             Rejected
           </button>
         ) : (
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => accept(props.appointment.id)}
               className="px-4 py-1 border rounded-full border-[#ff5757] bg-[#ff5757] text-white"
@@ -162,38 +136,23 @@ export default function AppointmentCard(props: { appointment: Appointment }) {
             </button>
           </div>
         )}
-
-        {/* {isAccepted !== rejected && isAccepted !== accepted ? (
-          <div className="flex gap-4 items-center">
-            <button
-              onClick={() => accept(props.appointment.id)}
-              className="px-4 py-1 border rounded-full border-[#ff5757] bg-[#ff5757] text-white"
-            >
-              Accept
-            </button>
-            <button
-              onClick={() => reject(props.appointment.id)}
-              className="px-4 py-1 border rounded-full border-[#ff5757] text-[#ff5757]"
-            >
-              Reject
-            </button>
-          </div>
-        ) : isAccepted == accepted ? (
-          <button
-            className="px-4 py-1 border rounded-full border-[#ff5757] text-[#ff5757]"
-            disabled
-          >
-            Accepted
-          </button>
-        ) : (
-          <button
-            className="px-4 py-1 border rounded-full border-[#ff5757] text-[#ff5757]"
-            disabled
-          >
-            Rejected
-          </button>
-        )} */}
       </div>
+      {isAccepted === rejected && (
+        <div className="w-full">
+          <label className="text-[16px] font-semibold">Rejection Reason:</label>
+          <select
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            className="w-full p-2 rounded-md border border-[#d9d9d9]"
+          >
+            <option value="">Select a reason</option>
+            <option value="Full booked at desired time">Full booked at desired time</option>
+            <option value="Doctor not on duty">Doctor not on duty</option>
+            <option value="Out of doctor expertise">Out of doctor expertise</option>
+            <option value="Unavailable">Unavailable</option>
+          </select>
+        </div>
+      )}
     </div>
   );
 }

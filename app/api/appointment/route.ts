@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
 		select: {
 			id: true,
-			reason: true,
+			symptoms: true,
 			description: true,
 			time: true,
 			date: true,

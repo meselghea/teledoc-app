@@ -60,10 +60,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { doctorId: string } }
+  { params }: { params: { userId: string } }
 ) {
   try {
-    const userId = params.doctorId;
+    const userId = params.userId;
     let json = await request.json();
 
     const updated_doctor = await db.doctor.update({

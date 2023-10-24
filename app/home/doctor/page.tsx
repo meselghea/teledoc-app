@@ -43,6 +43,8 @@ interface Appointment {
 		image: string;
 		name: string;
 	};
+	rejectionReason: string;
+	
 }
 
 export default function HomepagePatient() {
@@ -201,7 +203,7 @@ export default function HomepagePatient() {
 							//       <p className="text-[12px] text-[#858585] mb-3">
 							//         {appointment.time}
 							//       </p>
-							//       <div className="flex gap-4 items-center">
+							//       <div className="flex items-center gap-4">
 							//         <button className="px-4 py-1 border rounded-full border-[#ff5757] bg-[#ff5757] text-white">
 							//           Accept
 							//         </button>

@@ -4,10 +4,6 @@
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-
-import IconRolling from "../../assets/rolling.svg";
-
-import Select from "react-select";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import ImageKit from "imagekit";
@@ -19,9 +15,11 @@ import RoleSelect from "@/components/RoleSelect";
 import axios from "axios";
 import Image from "next/image";
 import { signIn, useSession } from "next-auth/react";
+import IconRolling from "../../assets/rolling.svg";
+import Link from "next/link";
 
 interface Doctor {
-	strNumber: string;
+	strNumber: number | null;
 	username: string;
 }
 
@@ -30,13 +28,10 @@ interface Register {
 	email: string;
 	phone: string;
 	password: string;
-	// gender: Gender;
-	// birthDate: Date | null;
-	// role: string;
+	gender: Gender;
+	birthDate: Date | null;
 	image: string;
-	// username: string;
-	// strnumber: number;
-	// doctor: Doctor;
+	doctor: Doctor;
 }
 
 interface Value {}
@@ -56,10 +51,6 @@ interface Gender {
 	label: string;
 }
 
-interface Role {
-	value: string;
-	label: string;
-}
 
 interface Profile {
 	name: string;
@@ -67,30 +58,27 @@ interface Profile {
 	email: string;
 	phone: string;
 	doctor: Doctor;
-	role: Role;
-
+	role: string;
+	birthDate: Date | null;
 	gender: Gender;
-
 	password: string;
+	strNumber: number | null;
 }
 
 const Page = () => {
 	const router = useRouter();
-	const [birthDate, setBirthDate] = React.useState<Date | null>(null);
 	const [selectedGender, setSelectedGender] = useState<Gender>({
 		value: "M",
 		label: "Male",
 	});
 	const [userProfile, setUserProfile] = useState<Profile>();
 	const [imageInput, setImageInput] = useState<FileList | null>(null);
-
+	const [birthDate, setBirthDate] = React.useState<Date | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
 	const [imageUrl, setImageUrl] = useState(userProfile?.image);
 
-	const [selectedRole, setSelectedRole] = useState<Role>({
-		value: "patient",
-		label: "Patient",
-	});
+
+	const [selectedRole, setSelectedRole] = useState(userProfile?.role);
 
 	const [imageUploadKey, setImageUploadKey] = useState(Date.now());
 
@@ -127,10 +115,14 @@ const Page = () => {
 			phone: !userProfile?.phone ? "" : String(userProfile?.phone),
 			password: !userProfile?.password ? "" : userProfile?.password,
 			image: !userProfile?.image ? "" : userProfile?.image,
-			// gender: !userProfile?.gender
-			//   ? { value: "", label: "" }
-			//   : userProfile?.gender,
-			// role: !userProfile?.image ? "" : userProfile?.image,
+			gender: !userProfile?.gender
+			 ? { value: "", label: "" }
+			: userProfile?.gender,
+			birthDate: !userProfile?.birthDate ? null : userProfile?.birthDate,
+			doctor: {
+				strNumber: !userProfile?.doctor?.strNumber ? null : userProfile?.doctor?.strNumber,
+				username: !userProfile?.doctor?.username ? "" : userProfile?.doctor?.username,
+			}
 		},
 		mode: "onTouched",
 	});
@@ -155,7 +147,7 @@ const Page = () => {
 		console.log(data);
 
 		try {
-			const response = await fetch("/api/users/me", {
+			const updateUserResponse = await fetch("/api/users/me", {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
@@ -164,26 +156,44 @@ const Page = () => {
 					email: data.email || userProfile?.email,
 					name: data.name || userProfile?.name,
 					phone: data.phone || userProfile?.phone,
-					password: data.password,
+					password: data.password || userProfile?.password,
 					image: imageUrl ? imageUrl : userProfile?.image,
+					birthDate: data.birthDate || userProfile?.birthDate, 
+					gender: data.gender || userProfile?.gender,
 				}),
 			});
 
-			if (response.ok) {
-				alert("Profile Successfully Updated");
+			if (updateUserResponse.status === 200) {
+				alert("User Profile Successfully Updated");
+			  } else {
+				console.error("User Profile update failed");
+			  }
+		  
+			  // If the user role is 'doctor', update doctor details
+			  if (userRole === 'doctor') {
+				const updateDoctorResponse = await axios.patch(`/api/doctor/${userId}`, {
+				  strNumber: data.doctor?.strNumber || userProfile?.doctor?.strNumber,
+				  username: data.doctor?.username || userProfile?.doctor?.username,
+				});
+		  
+				if (updateDoctorResponse.status === 200) {
+				  alert("Doctor Profile Successfully Updated");
+				} else {
+				  console.error("Doctor Profile update failed");
+				}
+			  }
+
 				if (userRole === "patient") {
 					callbackUrl += `patient`;
 					router.push(callbackUrl);
 				} else if (userRole === "doctor") {
 					callbackUrl += `doctor`;
+					router.push(callbackUrl);
 				}
-			} else {
-				console.error("Registration failed");
-			}
-		} catch (error) {
-			console.error(error);
-		}
-	};
+			  } catch (error) {
+				console.error(error);
+			  }
+			};
 
 	const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
 		setImageInput(e.target.files);
@@ -201,7 +211,7 @@ const Page = () => {
 				className="w-full max-w-[400px] flex flex-col items-center gap-4 py-4 overflow-y-scroll"
 			>
 				<nav className="relative flex items-center justify-center w-full">
-					<a href="/home/patient" className="absolute left-0">
+				<Link href={`/home/${userProfile?.role}`} className="absolute left-0">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 24 24"
@@ -214,7 +224,7 @@ const Page = () => {
 								clipRule="evenodd"
 							/>
 						</svg>
-					</a>
+					</Link>
 					<h1 className="text-[#ff5757] text-2xl font-bold">Personal Detail</h1>
 				</nav>
 				{/*IMAGE*/}
@@ -299,55 +309,59 @@ const Page = () => {
 					<p className="text-amber-500">{errors?.name?.message}</p>
 				</div>
 
-				{/* USERNAME */}
-				{/* <div className="w-full">
-          <label className="text-black" htmlFor="username">
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            placeholder="Enter your username"
-            defaultValue={userProfile?.doctor.username}
-            {...register("username", {
-              required: {
-                value: true,
-                message: "Username is a required field",
-              },
-            })}
-            className={`bg-[#d9d9d9]/30 h-[60px] px-4 rounded-lg border  text-black  w-full outline-none ${
-              errors?.username
-                ? "border-amber-500 focus:border-amber-500"
-                : "focus:border-[#ff5757] border-[#d9d9d9]"
-            } `}
-          />
-          <p className="text-amber-500">{errors?.username?.message}</p>
-        </div> */}
-
 				{/* STR NUMBER */}
-				{/* <div className="w-full">
-          <label className="text-black" htmlFor="strnumber">
-            Str Number
-          </label>
-          <input
-            id="strnumber"
-            type="text"
-            placeholder="Enter Str number"
-            defaultValue={userProfile?.doctor?.strNumber}
-            {...register("strnumber", {
-              required: {
-                value: true,
-                message: "Str number is a required field",
-              },
-            })}
-            className={`bg-[#d9d9d9]/30 h-[60px] px-4 rounded-lg border  text-black  w-full outline-none ${
-              errors?.strnumber
-                ? "border-amber-500 focus:border-amber-500"
-                : "focus:border-[#ff5757] border-[#d9d9d9]"
-            } `}
-          />
-          <p className="text-amber-500">{errors?.strnumber?.message}</p>
-        </div> */}
+{ userProfile?.role === "doctor" && (
+  <div className="w-full">
+    <label className="text-black" htmlFor="strnumber">
+      Str Number
+    </label>
+    <input
+      id="strnumber"
+      type="number"
+      placeholder="Enter Str number"
+	  defaultValue={userProfile?.doctor?.strNumber ?? ""}
+      {...register("doctor.strNumber", {
+        required: {
+          value: true,
+          message: "Str number is a required field",
+        },
+      })}
+      className={`bg-[#d9d9d9]/30 h-[60px] px-4 rounded-lg border  text-black  w-full outline-none ${
+        errors?.doctor?.strNumber
+          ? "border-amber-500 focus-border-amber-500"
+          : "focus-border-[#ff5757] border-[#d9d9d9]"
+      }`}
+    />
+    <p className="text-amber-500">{errors?.doctor?.strNumber?.message}</p>
+  </div>
+)}
+
+{/* USERNAME */}
+{userProfile?.role === "doctor" && (
+  <div className="w-full">
+    <label className="text-black" htmlFor="username">
+      Username
+    </label>
+    <input
+      id="username"
+      type="text"
+      placeholder="Enter your username"
+      defaultValue={userProfile?.doctor?.username}
+      {...register("doctor.username", {
+        required: {
+          value: true,
+          message: "Username is a required field",
+        },
+      })}
+      className={`bg-[#d9d9d9]/30 h-[60px] px-4 rounded-lg border  text-black  w-full outline-none ${
+        errors?.doctor?.username
+          ? "border-amber-500 focus-border-amber-500"
+          : "focus-border-[#ff5757] border-[#d9d9d9]"
+      }`}
+    />
+    <p className="text-amber-500">{errors?.doctor?.username?.message}</p>
+  </div>
+)}
 
 				{/* EMAIL */}
 				<div className="w-full">
@@ -411,14 +425,14 @@ const Page = () => {
 					</label>
 					<input
 						id="password"
+						defaultValue={userProfile?.password}
 						type="password"
 						placeholder="Enter your password"
-						defaultValue=""
 						{...register("password", {
-							// required: {
-							//   value: true,
-							//   message: "Password is a required field",
-							// },
+						// 	required: {
+						// 	  value: true,
+						// 	message: "Password is a required field",
+						//  },
 						})}
 						className={`bg-[#d9d9d9]/30 h-[60px] px-4 rounded-lg border  text-black w-full outline-none ${
 							errors?.password
@@ -429,27 +443,28 @@ const Page = () => {
 					<p className="text-amber-500">{errors?.password?.message}</p>
 				</div>
 				{/*BIRTHDATE*/}
-				{/* <p className="w-full -mb-4 text-left text-black">Birth Date</p> */}
-				{/* <LocalizationProvider dateAdapter={AdapterDayjs}>
+				<p className="w-full -mb-4 text-left text-black">Birth Date</p>
+				<LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             value={birthDate}
             onChange={(date) => setBirthDate(date)}
             format="YYYY - MM - DD"
+			defaultValue={userProfile?.birthDate}
             sx={{
               width: "100%",
               backgroundColor: "rgba(217, 217, 217, 0.3)",
               borderRadius: "8px",
             }}
           />
-        </LocalizationProvider> */}
-				{/* <h1 className="text-black">{birthDate?.$d.toString()}</h1> */}
+        </LocalizationProvider>
+				<h1 className="text-black">{birthDate?.toString()}</h1>
 
 				{/*GENDER*/}
-				{/* <GenderSelect
+				<GenderSelect
           selectedGender={selectedGender}
           setSelectedGender={setSelectedGender}
         />
-        <RoleSelect
+        {/* <RoleSelect
           selectedRole={selectedRole}
           setSelectedRole={setSelectedRole}
         /> */}

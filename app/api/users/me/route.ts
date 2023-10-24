@@ -3,6 +3,8 @@ import { getErrorResponse } from "@/lib/helpers";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { hash } from "bcrypt";
+import { parseISO } from 'date-fns'; 
 
 export async function GET(req: NextRequest) {
   try {
@@ -43,7 +45,8 @@ export async function GET(req: NextRequest) {
                 },
               },
             },
-            reason: true,
+            rejectionReason: true,
+            symptoms: true,
             description: true,
             time: true,
             date: true,
@@ -65,7 +68,8 @@ export async function GET(req: NextRequest) {
                 image: true,
               },
             },
-            reason: true,
+            rejectionReason: true,
+            symptoms: true,
             description: true,
             time: true,
             date: true,
@@ -106,10 +110,14 @@ export async function PATCH(request: Request) {
 
     const id = session.user.id;
     let json = await request.json();
-
+    const hashedPassword = await hash(json.password, 10);
+    const parsedBirthDate = parseISO(json.birthDate);
     const updated_user = await db.user.update({
       where: { id },
-      data: json,
+      data: {...json,
+        password: hashedPassword,
+        birthdate: parsedBirthDate,
+      }
     });
 
     let json_response = {

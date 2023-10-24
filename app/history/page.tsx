@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 interface Appointment {
 	status: {
 		name: string;
+		reason: string;
 	};
 	doctor: {
 		image: string;
@@ -41,9 +42,9 @@ const History: React.FC = () => {
 	}, [history]);
 
 	const mapped = history?.map((appointment, index) => (
-		<div key={index} className="flex justify-center items-center py-4 px-8">
+		<div key={index} className="flex items-center justify-center px-8 py-4">
 			<div className="container flex bg-[#d9d9d9]/30 h-[120px] w-[400px] px-0 rounded-lg border text-gray-400 outline-none">
-				<div className="p-2 flex items-center">
+				<div className="flex items-center p-2">
 					{appointment.doctor.image ? (
 						<img
 							className="w-20 h-20 rounded-full"
@@ -85,6 +86,11 @@ const History: React.FC = () => {
 						>
 							{appointment.status.name}
 						</p>
+						{appointment.status.name === "rejected" && (
+  <p className="mb-2 text-xs italic text-red-600">
+   Rejection Reason: {appointment.status.reason}
+  </p>
+)}
 					</div>
 				</div>
 			</div>
@@ -92,7 +98,7 @@ const History: React.FC = () => {
 	));
 
 	return (
-		<div className="bg-white w-screen h-fit flex justify-center items-center px-4 py-4">
+		<div className="flex items-center justify-center w-screen px-4 py-4 bg-white h-fit">
 			<div className="w-full max-w-[400px] flex flex-col items-center gap-4 py-4">
 				<nav className="relative flex items-center justify-center w-full">
 					<a href="./profile/patient" className="absolute left-0">
