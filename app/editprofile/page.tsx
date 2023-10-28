@@ -27,7 +27,6 @@ interface Register {
 	name: string;
 	email: string;
 	phone: string;
-	password: string;
 	gender: Gender;
 	birthDate: Date | null;
 	image: string;
@@ -61,7 +60,6 @@ interface Profile {
 	role: string;
 	birthDate: Date | null;
 	gender: Gender;
-	password: string;
 	strNumber: number | null;
 }
 
@@ -113,7 +111,7 @@ const Page = () => {
 			name: !userProfile?.name ? "" : userProfile?.name,
 			email: !userProfile?.email ? "" : userProfile?.email,
 			phone: !userProfile?.phone ? "" : String(userProfile?.phone),
-			password: !userProfile?.password ? "" : userProfile?.password,
+			//password: !userProfile?.password ? "" : userProfile?.password,
 			image: !userProfile?.image ? "" : userProfile?.image,
 			gender: !userProfile?.gender
 			 ? { value: "", label: "" }
@@ -147,7 +145,7 @@ const Page = () => {
 		console.log(data);
 
 		try {
-			const updateUserResponse = await fetch("/api/users/me", {
+			const updateUserResponse = await fetch("../api/users/me", {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
@@ -156,7 +154,7 @@ const Page = () => {
 					email: data.email || userProfile?.email,
 					name: data.name || userProfile?.name,
 					phone: data.phone || userProfile?.phone,
-					password: data.password || userProfile?.password,
+					//password: data.password,
 					image: imageUrl ? imageUrl : userProfile?.image,
 					birthDate: data.birthDate || userProfile?.birthDate, 
 					gender: data.gender || userProfile?.gender,
@@ -171,9 +169,15 @@ const Page = () => {
 		  
 			  // If the user role is 'doctor', update doctor details
 			  if (userRole === 'doctor') {
-				const updateDoctorResponse = await axios.patch(`/api/doctor/${userId}`, {
+				const updateDoctorResponse = await fetch(`../api/doctor/${userId}`, {
+					method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
 				  strNumber: data.doctor?.strNumber || userProfile?.doctor?.strNumber,
 				  username: data.doctor?.username || userProfile?.doctor?.username,
+				}),
 				});
 		  
 				if (updateDoctorResponse.status === 200) {
@@ -419,7 +423,7 @@ const Page = () => {
 				</div>
 
 				{/* PASSWORD */}
-				<div className="w-full">
+				{/* <div className="w-full">
 					<label className="text-black" htmlFor="password">
 						Password
 					</label>
@@ -441,7 +445,7 @@ const Page = () => {
 						} `}
 					/>
 					<p className="text-amber-500">{errors?.password?.message}</p>
-				</div>
+				</div> */}
 				{/*BIRTHDATE*/}
 				<p className="w-full -mb-4 text-left text-black">Birth Date</p>
 				<LocalizationProvider dateAdapter={AdapterDayjs}>
